@@ -6,32 +6,35 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"performance-api-webflux-vs-mvc-vs-golang/performance-go/handlers"
+	"performance-go/handlers"
 	"time"
 )
 
 func main() {
 
-	l := log.New(os.Stdout, "product-api", log.LstdFlags)
+	cl := log.New(os.Stdout, "client", log.LstdFlags)
+	pl := log.New(os.Stdout, "product-api", log.LstdFlags)
 
-	ph := handlers.NewProducts(l)
+	ch := handlers.NewClient(cl)
+	ph := handlers.NewProducts(pl)
 
 	sm := http.NewServeMux()
-	sm.Handle("/performance-go", ph)
+	sm.Handle("/products", ph)
+	sm.Handle("/performance-go", ch)
 
 	s := &http.Server{
 		Addr:         ":8083",
 		Handler:      sm,
 		IdleTimeout:  120 * time.Second,
-		ReadTimeout:  1 * time.Second,
-		WriteTimeout: 1 * time.Second,
+		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 30 * time.Second,
 	}
 
 	go func() {
 
 		err := s.ListenAndServe()
 		if err != nil {
-			l.Fatal(err)
+			cl.Fatal(err)
 		}
 	}()
 
@@ -40,7 +43,7 @@ func main() {
 	signal.Notify(sigChan, os.Kill)
 
 	sig := <-sigChan
-	l.Println("Receive terminate, shuting down", sig)
+	cl.Println("Receive terminate, shuting down", sig)
 
 	tc, _ := context.WithTimeout(context.Background(), 30*time.Second)
 	s.Shutdown(tc)
