@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.filipe.performance.dto.Product;
 
-import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux;
 
 @RestController
 @RequestMapping("/product")
@@ -33,7 +33,7 @@ public class ProductController {
 
 	@GetMapping
 	@ResponseStatus(HttpStatus.OK)
-	public Mono<List<Product>> getProducts(@RequestParam long delay) {		
-		return Mono.just(products).delayElement(Duration.ofMillis(delay));		
+	public Flux<Product> getProducts(@RequestParam long delay) {		
+		return Flux.fromIterable(products).delaySequence(Duration.ofMillis(delay));		
 	}
 }
